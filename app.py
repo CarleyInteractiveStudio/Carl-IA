@@ -55,8 +55,7 @@ with gr.Blocks(css="style.css") as demo:
                 elem_classes="textbox"
             ),
             # The token is now passed via the LoginButton, not here.
-            submit_btn=None,
-            examples=[["Hello!", None], ["How are you?", None]]
+            submit_btn=None
         )
 
         with gr.Row():
