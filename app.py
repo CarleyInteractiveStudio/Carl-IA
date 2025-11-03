@@ -41,7 +41,7 @@ function() {
 with gr.Blocks(css="style.css") as demo:
     gr.Markdown("<h1><center>Carl IA</center></h1>")
 
-    chatbot = gr.Chatbot(elem_classes="chatbot")
+    chatbot = gr.Chatbot(elem_classes="chatbot", type="messages")
 
     with gr.Row():
         msg = gr.Textbox(
@@ -60,7 +60,7 @@ with gr.Blocks(css="style.css") as demo:
         image_btn = gr.Button("Create Image", elem_classes=["button", "disabled-button"])
 
     # OAuth token for Hugging Face API
-    hf_token = gr.OAuthToken(label="Hugging Face Token")
+    hf_token = gr.OAuthToken()
 
     # --- Event Handlers ---
     msg.submit(predict, [msg, chatbot, hf_token], chatbot)
