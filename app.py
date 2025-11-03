@@ -56,7 +56,6 @@ with gr.Blocks(css="style.css") as demo:
             ),
             # The token is now passed via the LoginButton, not here.
             submit_btn=None,
-            clear_btn=gr.Button("Clear Conversation", elem_classes=["button", "primary-button"]),
             examples=[["Hello!", None], ["How are you?", None]]
         )
 
