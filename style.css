@@ -1,0 +1,94 @@
+/* General Body Styling */
+body {
+    background-color: #1a1a1a; /* Dark background */
+    color: #f0f0f0; /* Light text for readability */
+    font-family: 'Roboto', sans-serif; /* Modern, clean font */
+}
+
+/* Main container for the Gradio app */
+.gradio-container {
+    background-color: #1a1a1a;
+}
+
+/* Carl IA Title */
+h1 {
+    color: #4CAF50; /* Accent green for the title */
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+/* Chatbot Styling */
+.chatbot {
+    background-color: #2b2b2b; /* Slightly lighter dark shade for the chat window */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Styling for individual messages in the chatbot */
+.message {
+    border-radius: 15px;
+    padding: 12px;
+    margin-bottom: 10px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+/* User messages styling */
+.user-message {
+    background-color: #0d47a1; /* Dark blue for user messages */
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 0;
+}
+
+/* Bot messages styling */
+.bot-message {
+    background-color: #2E8B57; /* Sea green for bot messages */
+    color: white;
+    align-self: flex-start;
+    border-bottom-left-radius: 0;
+}
+
+/* Input Textbox Styling */
+.textbox {
+    background-color: #2b2b2b;
+    color: #f0f0f0;
+    border: 1px solid #4CAF50;
+    border-radius: 20px;
+    padding: 10px;
+    font-size: 1em;
+}
+
+/* General Button Styling */
+.button {
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+/* Primary action button (e.g., Clear) */
+.primary-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+}
+
+.primary-button:hover {
+    background-color: #66BB6A;
+    transform: translateY(-2px);
+}
+
+/* Disabled/Upcoming Feature Buttons */
+.disabled-button {
+    background-color: #424242; /* Gray to indicate disabled */
+    color: #9e9e9e;
+    border: 1px solid #616161;
+    cursor: not-allowed;
+}
+
+.disabled-button:hover {
+    background-color: #424242; /* No color change on hover */
+}
