@@ -2,28 +2,27 @@ import gradio as gr
 from huggingface_hub import InferenceClient
 
 # --- Configuration ---
-# We will use the Mistral-7B-Instruct-v0.2 model, which is powerful,
-# commercially usable, and available on the free Hugging Face Inference API.
 MODEL = "mistralai/Mistral-7B-Instruct-v0.2"
 SYSTEM_PROMPT = "You are a friendly and helpful chatbot named Carl IA."
 
-# --- Inference API Client ---
-# The hf_token is automatically provided by Gradio when the user logs in.
-def get_client(hf_token: gr.OAuthToken):
-    return InferenceClient(model=MODEL, token=hf_token.token if hf_token else None)
-
 # --- Chatbot Logic ---
-def predict(message, history, hf_token: gr.OAuthToken):
-    client = get_client(hf_token)
+# This function is designed to work with gr.ChatInterface, which handles history automatically.
+def respond(message, history, hf_token: gr.OAuthToken):
+    # If the user is not logged in, hf_token will be None.
+    if not hf_token:
+        raise gr.Error("Please log in with your Hugging Face account to use the chatbot.")
 
-    # Format the history for the API
+    client = InferenceClient(model=MODEL, token=hf_token)
+
+    # The history from ChatInterface comes as a list of tuples [user, assistant].
+    # We need to convert it to the format the API expects.
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     for user_msg, assistant_msg in history:
         messages.append({"role": "user", "content": user_msg})
         messages.append({"role": "assistant", "content": assistant_msg})
     messages.append({"role": "user", "content": message})
 
-    # Stream the response from the API
+    # Stream the response
     response_stream = ""
     for token in client.chat_completion(messages, max_tokens=1000, stream=True):
         if token.choices:
@@ -38,35 +37,35 @@ function() {
 """
 
 # --- Gradio Interface ---
+# We use gr.Blocks to combine the standard ChatInterface with our custom layout.
 with gr.Blocks(css="style.css") as demo:
     gr.Markdown("<h1><center>Carl IA</center></h1>")
 
-    chatbot = gr.Chatbot(elem_classes="chatbot", type="messages")
-
-    with gr.Row():
-        msg = gr.Textbox(
-            show_label=False,
+    # Use the official ChatInterface for robust functionality
+    gr.ChatInterface(
+        respond,
+        chatbot=gr.Chatbot(elem_classes="chatbot", bubble_full_width=False),
+        textbox=gr.Textbox(
             placeholder="Enter your message and press enter",
             container=False,
             scale=8,
             elem_classes="textbox"
-        )
+        ),
+        # Pass the token implicitly via the function signature
+        additional_inputs=[gr.OAuthToken()],
+        submit_btn=None, # Hide the default submit button
+        clear_btn=gr.Button("Clear Conversation", elem_classes=["button", "primary-button"]),
+        examples=[["Hello!", None], ["How are you?", None]]
+    )
 
+    # Add our custom "coming soon" buttons in a separate row
     with gr.Row():
-        clear = gr.Button("Clear Conversation", elem_classes=["button", "primary-button"])
         copy_btn = gr.Button("Copy Last Response", elem_classes=["button", "disabled-button"])
         call_btn = gr.Button("Call IA", elem_classes=["button", "disabled-button"])
         music_btn = gr.Button("Create Music", elem_classes=["button", "disabled-button"])
         image_btn = gr.Button("Create Image", elem_classes=["button", "disabled-button"])
 
-    # OAuth token for Hugging Face API
-    hf_token = gr.OAuthToken()
-
-    # --- Event Handlers ---
-    msg.submit(predict, [msg, chatbot, hf_token], chatbot)
-    clear.click(lambda: [], None, chatbot, queue=False)
-
-    # Attach "coming soon" JavaScript to the disabled buttons
+    # Attach the JavaScript alert to our custom buttons
     copy_btn.click(None, js=js_coming_soon)
     call_btn.click(None, js=js_coming_soon)
     music_btn.click(None, js=js_coming_soon)
