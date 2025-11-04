@@ -28,10 +28,16 @@ def predict(message, history, session_id="default"):
     past_user_inputs = chat_history_ids.get(session_id)
     bot_input_ids = torch.cat([past_user_inputs, new_user_input_ids], dim=-1) if past_user_inputs is not None else new_user_input_ids
 
-    # Generate a response
-    # The model will generate a response up to 1000 tokens
+    # Generate a response with parameters to improve quality and reduce repetition
     chat_history_ids[session_id] = model.generate(
-        bot_input_ids, max_length=1000, pad_token_id=tokenizer.eos_token_id
+        bot_input_ids,
+        max_new_tokens=150,  # Limit the length of the response
+        do_sample=True,
+        top_k=50,
+        top_p=0.95,
+        temperature=0.8,
+        no_repeat_ngram_size=3, # Prevent repeating phrases
+        pad_token_id=tokenizer.eos_token_id
     )
 
     # Decode the response
