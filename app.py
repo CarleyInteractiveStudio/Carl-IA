@@ -7,8 +7,8 @@ import torch
 # microsoft/DialoGPT-medium is a good conversational model that is small
 # enough to have a chance of running on the free CPU hardware.
 # This completely removes the need for an API key or user login.
-# We are using a model specifically trained for Spanish.
-MODEL_NAME = "datificate/gpt2-small-spanish"
+# We are using a higher quality, fine-tuned model for Spanish conversation.
+MODEL_NAME = "mrm8488/GPT-2-small-finetuned-spanish-tutti"
 
 # --- Model Loading ---
 # This happens once when the app starts. It might be slow.
