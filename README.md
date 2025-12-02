@@ -1,74 +1,70 @@
-# Modelos de IA Open Source para Carl IA
+# Carl IA - Un Ecosistema de IA Distribuido
 
-Este documento contiene una lista curada de modelos de Inteligencia Artificial de código abierto recomendados para potenciar las funcionalidades de **Carl IA**. Todos los modelos listados tienen licencias que permiten su uso comercial.
+¡Bienvenido al repositorio de Carl IA! Este proyecto implementa un asistente de IA conversacional con la capacidad de coordinar múltiples modelos de IA "especialistas" para realizar tareas complejas como la generación de imágenes, música y más.
 
----
-
-## 1. Generación de Video
-
-### WanVideo 2.1
-- **Descripción:** Un modelo de última generación desarrollado por Alibaba que convierte imágenes en videos de alta calidad. A menudo supera a otras soluciones de código abierto y compite con modelos privados.
-- **Licencia:** [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Permite uso comercial).
-- **Ideal para:** Crear animaciones, clips cortos a partir de imágenes y contenido de video dinámico.
-- **Recursos Oficiales:**
-  - **GitHub:** [https://github.com/Wan-Video/Wan2.1](https://github.com/Wan-Video/Wan2.1)
-  - **Hugging Face:** [https://huggingface.co/Wan-AI/Wan2.1-T2V-14B](https://huggingface.co/Wan-AI/Wan2.1-T2V-14B)
+La arquitectura está diseñada para ser modular y escalable, utilizando Hugging Face Spaces para desplegar cada componente de forma independiente.
 
 ---
 
-## 2. Generación de Imágenes
+## Arquitectura del Proyecto
 
-### Stable Diffusion
-- **Descripción:** El modelo más conocido y versátil para generar imágenes a partir de texto. Cuenta con una comunidad enorme, muchísimos tutoriales y modelos pre-entrenados para casi cualquier estilo.
-- **Licencia:** [CreativeML OpenRAIL-M](https://huggingface.co/spaces/CompVis/stable-diffusion-license) (Permisiva para uso comercial).
-- **Ideal para:** Prácticamente cualquier tarea de generación de imágenes, desde arte fotorrealista hasta ilustraciones de fantasía.
-- **Recursos Oficiales:**
-  - **GitHub:** [https://github.com/CompVis/stable-diffusion](https://github.com/CompVis/stable-diffusion)
-  - **Hugging Face:** [https://huggingface.co/stabilityai/stable-diffusion-3-medium](https://huggingface.co/stabilityai/stable-diffusion-3-medium)
+El proyecto está dividido en tres componentes principales:
 
-### FLUX.1 (versión "schnell")
-- **Descripción:** Un modelo más reciente de Black Forest Labs que destaca por entender las instrucciones con gran precisión y generar texto dentro de las imágenes de forma correcta.
-- **Licencia:** [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Permite uso comercial).
-- **Ideal para:** Imágenes que requieren alta fidelidad al texto o que incluyen tipografía.
-- **Recursos Oficiales:**
-  - **Hugging Face:** [https://huggingface.co/black-forest-labs/FLUX.1-schnell](https://huggingface.co/black-forest-labs/FLUX.1-schnell)
+1.  **`frontend/`**: La interfaz de chat con la que interactúa el usuario. Es una aplicación web estática construida con HTML, CSS y JavaScript.
+2.  **`space-orchestrator/`**: El "Cerebro" de Carl. Este es un servicio de backend que recibe los mensajes del usuario, utiliza un Modelo de Lenguaje (LLM) para interpretar la intención y llama a otros servicios de IA cuando es necesario.
+3.  **`space-artist-image/`**: Un servicio "especialista" dedicado a la generación de imágenes. Recibe órdenes del orquestador y devuelve la imagen generada.
 
 ---
 
-## 3. Modelos de Lenguaje (LLM)
+## Cómo Desplegar el Ecosistema en Hugging Face
 
-### Llama 3
-- **Descripción:** Uno de los modelos más potentes de Meta, compitiendo directamente con los mejores modelos privados. Es excelente para conversar, razonar, programar y seguir instrucciones complejas.
-- **Licencia:** [Llama 3 License](https://github.com/meta-llama/llama3/blob/main/LICENSE) (Permite uso comercial, con algunas condiciones).
-- **Ideal para:** La función principal de chat, asistencia en programación y generación de texto creativo.
-- **Recursos Oficiales:**
-  - **GitHub:** [https://github.com/meta-llama/llama3](https://github.com/meta-llama/llama3)
-  - **Hugging Face:** [https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct)
+Para poner en marcha a Carl, necesitas desplegar los dos servicios de backend en Hugging Face Spaces y configurar el frontend para que apunte al orquestador.
+
+### Paso 1: Desplegar el Servicio de Imágenes ("El Artista")
+
+1.  **Ve a la carpeta `space-artist-image/`.**
+2.  Sigue las instrucciones detalladas en el archivo **`space-artist-image/README.md`**.
+3.  Una vez desplegado, copia la URL de tu nuevo Space. La necesitarás para el siguiente paso.
+
+### Paso 2: Desplegar el Servicio Orquestador ("El Cerebro")
+
+1.  **Ve a la carpeta `space-orchestrator/`.**
+2.  Sigue las instrucciones del archivo **`space-orchestrator/README.md`**.
+3.  **Importante:** Durante la configuración, asegúrate de añadir la URL del Space del "Artista" como un "secret" llamado `IMAGE_SERVICE_URL`.
+4.  Una vez desplegado, copia la URL de este Space.
+
+### Paso 3: Configurar y Probar el Frontend
+
+1.  **Abre el archivo `frontend/script.js`**.
+2.  Busca la línea que dice: `const ORCHESTRATOR_URL = "http://localhost:8000/chat/";`.
+3.  **Reemplaza la URL de ejemplo** con la URL de tu Space "Cerebro" que copiaste en el paso anterior.
+4.  ¡Listo! Ahora puedes abrir el archivo `frontend/index.html` en tu navegador. El chat se conectará a tu backend en Hugging Face.
 
 ---
 
-## 4. Generación de Música
+## Modelos de IA Recomendados (Para Futuras Mejoras)
 
-### Riffusion
-- **Descripción:** Un modelo que genera música a partir de texto visualizando el sonido como espectrogramas. Es muy creativo y ofrece un gran control sobre el resultado.
-- **Licencia:** [MIT License](https://github.com/riffusion/riffusion/blob/main/LICENSE) (Permite uso comercial **si se ejecuta en servidores propios**).
-- **Ideal para:** Crear bandas sonoras, efectos de sonido y música original.
-- **Recursos Oficiales:**
-  - **GitHub:** [https://github.com/riffusion/riffusion](https://github.com/riffusion/riffusion)
-  - **Hugging Face:** [https://huggingface.co/riffusion/riffusion-model-v1](https://huggingface.co/riffusion/riffusion-model-v1)
+A continuación se encuentra una lista de modelos de IA de código abierto recomendados para escalar y mejorar las capacidades de Carl. Todos tienen licencias que permiten su uso comercial.
 
----
+### Generación de Video
+- **WanVideo 2.1:** [GitHub](https://github.com/Wan-Video/Wan2.1), [Hugging Face](https://huggingface.co/Wan-AI/Wan2.1-T2V-14B)
+  - **Licencia:** Apache 2.0
 
-## 5. Edición de Imágenes y Eliminación de Fondo
+### Generación de Imágenes
+- **Stable Diffusion:** [GitHub](https://github.com/CompVis/stable-diffusion), [Hugging Face](https://huggingface.co/stabilityai/stable-diffusion-3-medium)
+  - **Licencia:** CreativeML OpenRAIL-M
+- **FLUX.1 (schnell):** [Hugging Face](https://huggingface.co/black-forest-labs/FLUX.1-schnell)
+  - **Licencia:** Apache 2.0
 
-### withoutBG
-- **Descripción:** Un modelo especializado y muy preciso diseñado exclusivamente para quitar el fondo de las imágenes de forma limpia y rápida.
-- **Licencia:** [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Permite uso comercial).
-- **Ideal para:** La función específica de eliminar fondos de imágenes.
-- **Recursos Oficiales:**
-  - **GitHub:** [https://github.com/withoutbg/withoutbg](https://github.com/withoutbg/withoutbg)
+### Modelos de Lenguaje (LLM)
+- **Llama 3:** [GitHub](https://github.com/meta-llama/llama3), [Hugging Face](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct)
+  - **Licencia:** Llama 3 License
 
-### Stable Diffusion (para Edición)
-- **Descripción:** Además de generar imágenes, Stable Diffusion es excelente para editar. Con técnicas como **"inpainting"** (rellenar partes de una imagen) y **"outpainting"** (expandir una imagen), puedes hacer ediciones complejas.
-- **Ideal para:** Añadir, quitar o modificar objetos en una imagen, cambiar estilos y mucho más.
-- **Recursos:** Los mismos que en la sección de Generación de Imágenes.
+### Generación de Música
+- **Riffusion:** [GitHub](https://github.com/riffusion/riffusion), [Hugging Face](https://huggingface.co/riffusion/riffusion-model-v1)
+  - **Licencia:** MIT (para uso auto-hospedado)
+
+### Edición y Eliminación de Fondo
+- **withoutBG:** [GitHub](https://github.com/withoutbg/withoutbg)
+  - **Licencia:** Apache 2.0
+- **Stable Diffusion (Inpainting/Outpainting):** Mismos enlaces que arriba.
