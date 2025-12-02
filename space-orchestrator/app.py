@@ -26,6 +26,8 @@ app.add_middleware(
 # "microsoft/phi-2" es una buena opción de tamaño reducido.
 model_id = "microsoft/phi-2"
 tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+# Configuramos el pad_token para eliminar warnings durante la generación.
+tokenizer.pad_token = tokenizer.eos_token
 model = AutoModelForCausalLM.from_pretrained(
     model_id,
     torch_dtype=torch.float32, # float32 para CPU
@@ -47,7 +49,6 @@ def generate_llm_response(user_prompt: str):
     Devuelve una respuesta estructurada.
     """
     # Prompt de sistema mucho más directo y con ejemplos claros (Few-shot prompting)
-    # Esto reduce la confusión del modelo.
     system_prompt = """Tu tarea es clasificar la intención del usuario y responder SOLAMENTE con un objeto JSON. No añadas texto antes ni después.
 
 Ejemplos:
@@ -63,30 +64,38 @@ Tu JSON: {"action": "chat", "response": "Claro, ¡hablemos! ¿De qué te gustar�
 
     full_prompt = f"{system_prompt}\nUsuario: {user_prompt}\nTu JSON:"
 
-    inputs = tokenizer(full_prompt, return_tensors="pt", return_attention_mask=False)
+    # Tokenizamos la entrada para obtener su longitud
+    inputs = tokenizer(full_prompt, return_tensors="pt")
+    input_ids = inputs.input_ids
+    attention_mask = inputs.attention_mask
+    input_length = input_ids.shape[1]
 
-    # Generar la respuesta
-    outputs = model.generate(**inputs, max_length=500) # Un poco más de espacio por si acaso
-    raw_output = tokenizer.batch_decode(outputs)[0]
+    # Generamos la respuesta, pidiendo solo los tokens *nuevos*
+    outputs = model.generate(
+        input_ids,
+        attention_mask=attention_mask,
+        max_new_tokens=150,  # Suficiente para un JSON de respuesta
+        pad_token_id=tokenizer.eos_token_id
+    )
 
-    # --- Parseador de JSON más robusto ---
-    # Busca el primer '{' y el último '}' en la salida del modelo.
-    # Esto ayuda a aislar el JSON incluso si el modelo añade texto extra.
+    # Aislamos y decodificamos *únicamente* la parte nueva de la respuesta
+    generated_tokens = outputs[0, input_length:]
+    generated_text = tokenizer.decode(generated_tokens, skip_special_tokens=True)
+
+    # --- Parseador de JSON sobre el texto aislado ---
     try:
-        start = raw_output.find('{')
-        end = raw_output.rfind('}') + 1
+        start = generated_text.find('{')
+        end = generated_text.rfind('}') + 1
         if start != -1 and end != -1:
-            json_part = raw_output[start:end]
+            json_part = generated_text[start:end]
             response_json = json.loads(json_part)
             return response_json
         else:
-            # Si no encuentra un JSON, levanta un error para ir al bloque de fallback.
-            raise ValueError("No JSON object found in the model's output")
+            raise ValueError("No se encontró un objeto JSON en el texto generado.")
 
     except (json.JSONDecodeError, ValueError) as e:
         print(f"Error al decodificar la respuesta del LLM: {e}")
-        print(f"Texto de salida problemático: {raw_output}")
-        # Si el LLM falla, damos una respuesta por defecto.
+        print(f"Texto generado problemático: {generated_text}")
         return {"action": "chat", "response": "No pude entender tu petición. ¿Podrías reformularla?"}
 
 # --- Endpoint de la API ---
