@@ -1,3 +1,12 @@
+---
+title: Carl IA - Artist (Image Gen)
+emoji: 🎨
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # Servicio de Imágenes - "El Artista" para Carl IA
 
 Este es un servicio de backend construido con FastAPI que expone un modelo de IA para generar imágenes a partir de texto.

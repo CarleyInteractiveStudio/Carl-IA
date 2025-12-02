@@ -1,3 +1,12 @@
+---
+title: Carl IA - Brain (Orchestrator)
+emoji: 🧠
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # Servicio Orquestador - "El Cerebro" para Carl IA
 
 Este es el backend principal de Carl IA. Utiliza un Modelo de Lenguaje (LLM) para interpretar las peticiones de los usuarios y coordinar acciones con otros servicios, como el generador de imágenes.
