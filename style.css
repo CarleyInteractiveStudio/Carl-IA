@@ -1,9 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 :root {
-    --background-color: #121212;
-    --container-bg-color: #1e1e1e;
-    --user-message-bg: #005c97;
+    --background-color: #0A0F2C;
+    --container-bg-color: #10163a;
+    --gradient-start: #66E0FF;
+    --gradient-end: #00CFFF;
     --carl-message-bg: #333333;
     --text-color: #e0e0e0;
     --font-family: 'Poppins', sans-serif;
@@ -67,7 +68,9 @@ body {
 }
 
 .user-message .message-content {
-    background-color: var(--user-message-bg);
+    background-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    color: #121212;
+    font-weight: 500;
     border-top-right-radius: 4px;
 }
 
@@ -85,6 +88,22 @@ body {
 .carl-message .message-content {
     background-color: var(--carl-message-bg);
     border-top-left-radius: 4px;
+}
+
+.support-button {
+    display: inline-block;
+    padding: 10px 18px;
+    margin-top: 10px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    color: #121212;
+    background-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    transition: filter 0.3s;
+}
+
+.support-button:hover {
+    filter: brightness(1.1);
 }
 
 @keyframes fadeIn {
@@ -110,7 +129,7 @@ body {
 
 #message-input:focus {
     outline: none;
-    box-shadow: 0 0 0 2px var(--user-message-bg);
+    box-shadow: 0 0 0 2px var(--gradient-end);
 }
 
 #message-form button {
@@ -118,14 +137,14 @@ body {
     padding: 12px 20px;
     border: none;
     border-radius: 25px;
-    background-color: var(--user-message-bg);
-    color: white;
+    background-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    color: #121212;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: filter 0.3s;
 }
 
 #message-form button:hover {
-    background-color: #007bb5;
+    filter: brightness(1.1);
 }
