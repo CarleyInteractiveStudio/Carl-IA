@@ -60,7 +60,8 @@ def generate_llm_response(user_prompt: str):
     inputs = tokenizer(full_prompt, return_tensors="pt", return_attention_mask=False)
 
     # Generar la respuesta
-    outputs = model.generate(**inputs, max_length=200)
+    # Aumentamos max_length para dar espacio al prompt del sistema y la respuesta.
+    outputs = model.generate(**inputs, max_length=400)
     text_output = tokenizer.batch_decode(outputs)[0]
 
     # Extraer solo la respuesta JSON de Carl
