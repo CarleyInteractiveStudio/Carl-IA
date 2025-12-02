@@ -44,40 +44,49 @@ class ChatRequest(BaseModel):
 def generate_llm_response(user_prompt: str):
     """
     Usa el LLM para decidir si el usuario quiere una imagen o solo chatear.
-    Devuelve una respuesta estructurada (nuestro "código secreto").
+    Devuelve una respuesta estructurada.
     """
-    # Un prompt de sistema simple para guiar al LLM
-    system_prompt = (
-        "Eres Carl, un asistente de IA. Tu trabajo es determinar si el usuario quiere generar una imagen o simplemente chatear. "
-        "Si el usuario quiere una imagen, responde en formato JSON con la clave 'action' como 'generate_image' y 'prompt' con el texto para la imagen. "
-        "Si el usuario solo quiere chatear, responde con la clave 'action' como 'chat' y 'response' con tu respuesta en texto. "
-        "Ejemplo para imagen: {\"action\": \"generate_image\", \"prompt\": \"un astronauta en un caballo\"}. "
-        "Ejemplo para chat: {\"action\": \"chat\", \"response\": \"¡Hola! ¿Cómo puedo ayudarte hoy?\"}."
-    )
+    # Prompt de sistema mucho más directo y con ejemplos claros (Few-shot prompting)
+    # Esto reduce la confusión del modelo.
+    system_prompt = """Tu tarea es clasificar la intención del usuario y responder SOLAMENTE con un objeto JSON. No añadas texto antes ni después.
 
-    full_prompt = f"{system_prompt}\n\nUsuario: {user_prompt}\nCarl:"
+Ejemplos:
+Usuario: hola como estas
+Tu JSON: {"action": "chat", "response": "¡Hola! Estoy bien, gracias por preguntar. ¿En qué puedo ayudarte hoy?"}
+
+Usuario: puedes crear una foto de un gato con sombrero
+Tu JSON: {"action": "generate_image", "prompt": "un gato con sombrero"}
+
+Usuario: quiero hablar
+Tu JSON: {"action": "chat", "response": "Claro, ¡hablemos! ¿De qué te gustaría conversar?"}
+"""
+
+    full_prompt = f"{system_prompt}\nUsuario: {user_prompt}\nTu JSON:"
 
     inputs = tokenizer(full_prompt, return_tensors="pt", return_attention_mask=False)
 
     # Generar la respuesta
-    # Aumentamos max_length para dar espacio al prompt del sistema y la respuesta.
-    outputs = model.generate(**inputs, max_length=400)
-    text_output = tokenizer.batch_decode(outputs)[0]
+    outputs = model.generate(**inputs, max_length=500) # Un poco más de espacio por si acaso
+    raw_output = tokenizer.batch_decode(outputs)[0]
 
-    # Extraer solo la respuesta JSON de Carl
+    # --- Parseador de JSON más robusto ---
+    # Busca el primer '{' y el último '}' en la salida del modelo.
+    # Esto ayuda a aislar el JSON incluso si el modelo añade texto extra.
     try:
-        # Buscamos el inicio del JSON
-        json_part = text_output.split("Carl:")[1].strip()
-        # Limpiamos cualquier texto extra que el modelo pueda añadir después del JSON
-        if "}" in json_part:
-            json_part = json_part.split("}")[0] + "}"
+        start = raw_output.find('{')
+        end = raw_output.rfind('}') + 1
+        if start != -1 and end != -1:
+            json_part = raw_output[start:end]
+            response_json = json.loads(json_part)
+            return response_json
+        else:
+            # Si no encuentra un JSON, levanta un error para ir al bloque de fallback.
+            raise ValueError("No JSON object found in the model's output")
 
-        response_json = json.loads(json_part)
-        return response_json
-    except (json.JSONDecodeError, IndexError) as e:
+    except (json.JSONDecodeError, ValueError) as e:
         print(f"Error al decodificar la respuesta del LLM: {e}")
-        print(f"Texto de salida problemático: {text_output}")
-        # Si el LLM falla, damos una respuesta por defecto
+        print(f"Texto de salida problemático: {raw_output}")
+        # Si el LLM falla, damos una respuesta por defecto.
         return {"action": "chat", "response": "No pude entender tu petición. ¿Podrías reformularla?"}
 
 # --- Endpoint de la API ---
