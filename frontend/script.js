@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageList = document.getElementById('message-list');
     const chatWindow = document.getElementById('chat-window');
 
-    // IMPORTANTE: Deberás reemplazar esto con la URL de tu Space "orquestador"
-    const ORCHESTRATOR_URL = "http://localhost:8000/chat/"; // URL de ejemplo para desarrollo local
+    // URL del servicio orquestador en producción
+    const ORCHESTRATOR_URL = "https://carley1234-carl-ia.hf.space/chat/";
 
     messageForm.addEventListener('submit', async (event) => {
         event.preventDefault();
