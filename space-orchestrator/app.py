@@ -1,5 +1,6 @@
 # space-orchestrator/app.py
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 import json
@@ -9,6 +10,16 @@ import torch
 
 # Inicializar la aplicación FastAPI
 app = FastAPI()
+
+# --- Middleware de CORS ---
+# Permite que el frontend (desde cualquier origen) se comunique con este backend.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite solicitudes de cualquier origen
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos HTTP (GET, POST, etc.)
+    allow_headers=["*"],  # Permite todas las cabeceras
+)
 
 # --- Configuración del Modelo de Lenguaje ---
 # Usaremos un LLM muy pequeño, ideal para clasificación de intenciones y CPU.

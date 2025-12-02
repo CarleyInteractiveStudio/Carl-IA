@@ -1,5 +1,6 @@
 # space-artist-image/app.py
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import torch
@@ -8,6 +9,16 @@ import os
 
 # Inicializar la aplicación FastAPI
 app = FastAPI()
+
+# --- Middleware de CORS ---
+# Permite que el frontend (desde cualquier origen) se comunique con este backend.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite solicitudes de cualquier origen
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos HTTP (GET, POST, etc.)
+    allow_headers=["*"],  # Permite todas las cabeceras
+)
 
 # --- Configuración del Modelo ---
 # Usaremos un modelo muy pequeño y rápido, optimizado para CPU.
