@@ -71,6 +71,50 @@ Matrix* matrix_copy(const Matrix* src) {
     return dst;
 }
 
+Matrix* matrix_subtract(const Matrix* a, const Matrix* b) {
+    if (a->rows != b->rows || a->cols != b->cols) {
+        fprintf(stderr, "Error: Matrix dimensions must match for subtraction.\n");
+        return NULL;
+    }
+    Matrix* result = matrix_create(a->rows, a->cols);
+    if (!result) return NULL;
+
+    for (int i = 0; i < a->rows; i++) {
+        for (int j = 0; j < a->cols; j++) {
+            result->data[i][j] = a->data[i][j] - b->data[i][j];
+        }
+    }
+    return result;
+}
+
+Matrix* matrix_transpose(const Matrix* m) {
+    Matrix* result = matrix_create(m->cols, m->rows);
+    if (!result) return NULL;
+
+    for (int i = 0; i < m->rows; i++) {
+        for (int j = 0; j < m->cols; j++) {
+            result->data[j][i] = m->data[i][j];
+        }
+    }
+    return result;
+}
+
+Matrix* matrix_elementwise_multiply(const Matrix* a, const Matrix* b) {
+    if (a->rows != b->rows || a->cols != b->cols) {
+        fprintf(stderr, "Error: Matrix dimensions must match for element-wise multiplication.\n");
+        return NULL;
+    }
+    Matrix* result = matrix_create(a->rows, a->cols);
+    if (!result) return NULL;
+
+    for (int i = 0; i < a->rows; i++) {
+        for (int j = 0; j < a->cols; j++) {
+            result->data[i][j] = a->data[i][j] * b->data[i][j];
+        }
+    }
+    return result;
+}
+
 void matrix_print(const Matrix* m) {
     if (m == NULL) {
         printf("Matrix is NULL.\n");

@@ -30,5 +30,8 @@ Matrix* nn_forward(NeuralNetwork* nn, const Matrix* input);
 // Prints the network structure and weights (for debugging)
 void nn_print(const NeuralNetwork* nn);
 
+// Performs a single training step (forward, backpropagation, and weight update)
+void nn_train(NeuralNetwork* nn, const Matrix* input, const Matrix* target, double learning_rate);
+
 
 #endif // NEURAL_NET_H

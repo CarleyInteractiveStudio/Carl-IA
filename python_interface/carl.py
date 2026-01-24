@@ -49,6 +49,9 @@ carl_lib.nn_forward.restype = ctypes.POINTER(CMatrix)
 carl_lib.nn_print.argtypes = [ctypes.POINTER(CNeuralNetwork)]
 carl_lib.nn_print.restype = None
 
+carl_lib.nn_train.argtypes = [ctypes.POINTER(CNeuralNetwork), ctypes.POINTER(CMatrix), ctypes.POINTER(CMatrix), ctypes.c_double]
+carl_lib.nn_train.restype = None
+
 
 # --- Python Wrapper Classes ---
 
@@ -117,6 +120,13 @@ class NeuralNetwork:
             raise Exception("Forward propagation failed in C.")
 
         return Matrix(rows=0, cols=0, _ptr=result_ptr)
+
+    def train(self, input_data, target_data, learning_rate):
+        """Performs a single training step."""
+        if not isinstance(input_data, Matrix) or not isinstance(target_data, Matrix):
+            raise TypeError("Input and target data must be Matrix objects.")
+
+        carl_lib.nn_train(self.ptr, input_data.ptr, target_data.ptr, learning_rate)
 
     def __str__(self):
         carl_lib.nn_print(self.ptr)

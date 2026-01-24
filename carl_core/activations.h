@@ -8,10 +8,10 @@ static inline double sigmoid(double x) {
     return 1.0 / (1.0 + exp(-x));
 }
 
-// Derivative of the sigmoid function (will be needed for backpropagation later)
+// Derivative of the sigmoid function.
+// NOTE: The input 'x' is assumed to be the *output* of the sigmoid function.
 static inline double sigmoid_derivative(double x) {
-    double s = sigmoid(x);
-    return s * (1.0 - s);
+    return x * (1.0 - x);
 }
 
 #endif // ACTIVATIONS_H

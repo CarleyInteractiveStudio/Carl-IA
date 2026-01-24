@@ -36,4 +36,13 @@ void matrix_map(Matrix* m, double (*func)(double));
 // Creates a deep copy of a matrix
 Matrix* matrix_copy(const Matrix* src);
 
+// Subtracts matrix B from matrix A and returns the result as a new matrix
+Matrix* matrix_subtract(const Matrix* a, const Matrix* b);
+
+// Transposes a matrix
+Matrix* matrix_transpose(const Matrix* m);
+
+// Performs element-wise multiplication (Hadamard product)
+Matrix* matrix_elementwise_multiply(const Matrix* a, const Matrix* b);
+
 #endif // MATRIX_H

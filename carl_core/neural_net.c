@@ -124,3 +124,82 @@ void nn_print(const NeuralNetwork* nn) {
         matrix_print(nn->layers[i].biases);
     }
 }
+
+// Helper function to apply the derivative of the sigmoid function element-wise
+void matrix_map_sigmoid_derivative(Matrix* m) {
+    for (int i = 0; i < m->rows; i++) {
+        for (int j = 0; j < m->cols; j++) {
+            m->data[i][j] = sigmoid_derivative(m->data[i][j]);
+        }
+    }
+}
+
+void nn_train(NeuralNetwork* nn, const Matrix* input, const Matrix* target, double learning_rate) {
+    // --- 1. Forward Pass ---
+    // We need to store the outputs of each layer for backpropagation
+    Matrix** layer_outputs = (Matrix**)malloc(nn->num_layers * sizeof(Matrix*));
+    layer_outputs[0] = matrix_copy(input);
+
+    for (int i = 0; i < nn->num_layers - 1; i++) {
+        Matrix* prev_output = layer_outputs[i];
+        Matrix* current_output = matrix_multiply(prev_output, nn->layers[i].weights);
+        matrix_add_bias(current_output, nn->layers[i].biases);
+        matrix_map(current_output, sigmoid);
+        layer_outputs[i + 1] = current_output;
+    }
+
+    // --- 2. Backpropagation ---
+    // Calculate the error for the output layer
+    Matrix* output_error = matrix_subtract(target, layer_outputs[nn->num_layers - 1]);
+
+    // Loop backwards from the last layer to the first hidden layer
+    for (int i = nn->num_layers - 2; i >= 0; i--) {
+        // Calculate gradient (delta rule)
+        Matrix* gradients = matrix_copy(layer_outputs[i + 1]);
+        matrix_map_sigmoid_derivative(gradients); // This is f'(net)
+
+        // Multiply by error to get the final delta
+        Matrix* temp_gradients = gradients;
+        gradients = matrix_elementwise_multiply(temp_gradients, output_error);
+        matrix_destroy(temp_gradients); // Clean up the intermediate matrix
+
+        // Calculate deltas
+        Matrix* layer_outputs_transposed = matrix_transpose(layer_outputs[i]);
+        Matrix* deltas = matrix_multiply(layer_outputs_transposed, gradients);
+
+        // Update weights and biases
+        for (int r = 0; r < deltas->rows; r++) {
+            for (int c = 0; c < deltas->cols; c++) {
+                nn->layers[i].weights->data[r][c] += deltas->data[r][c] * learning_rate;
+            }
+        }
+        for (int r = 0; r < gradients->rows; r++) {
+            for (int c = 0; c < gradients->cols; c++) {
+                 nn->layers[i].biases->data[r][c] += gradients->data[r][c] * learning_rate;
+            }
+        }
+
+        // Calculate the error for the previous layer (for the next iteration)
+        Matrix* prev_error = matrix_transpose(nn->layers[i].weights);
+        Matrix* next_output_error = matrix_multiply(gradients, prev_error);
+
+        // Cleanup intermediate matrices.
+        // Crucially, we must store the old error pointer before updating it,
+        // to prevent a use-after-free bug.
+        Matrix* old_error = output_error;
+        output_error = next_output_error;
+        matrix_destroy(old_error);
+
+        matrix_destroy(gradients);
+        matrix_destroy(layer_outputs_transposed);
+        matrix_destroy(deltas);
+        matrix_destroy(prev_error);
+    }
+
+    // Final cleanup
+    matrix_destroy(output_error);
+    for (int i = 0; i < nn->num_layers; i++) {
+        matrix_destroy(layer_outputs[i]);
+    }
+    free(layer_outputs);
+}
