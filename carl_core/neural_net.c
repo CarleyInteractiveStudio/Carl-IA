@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h> // For memcpy
 
-NeuralNetwork* nn_create(const int* topology, int num_layers) {
+NeuralNetwork* nn_create(const int* topology, int num_layers, const ActivationType* activations) {
     if (num_layers < 2) {
         fprintf(stderr, "Error: A neural network must have at least 2 layers (input and output).\n");
         return NULL;
@@ -51,6 +51,10 @@ NeuralNetwork* nn_create(const int* topology, int num_layers) {
             return NULL;
         }
 
+        // Assign the activation function for this layer
+        // Default to SIGMOID if no activations are provided
+        nn->layers[i].activation = activations ? activations[i] : SIGMOID;
+
         // Randomize the weights and biases
         matrix_randomize(nn->layers[i].weights);
         matrix_randomize(nn->layers[i].biases);
@@ -87,8 +91,16 @@ Matrix* nn_forward(NeuralNetwork* nn, const Matrix* input) {
         // Add the bias
         matrix_add_bias(current_output, nn->layers[i].biases);
 
-        // Apply the activation function
-        matrix_map(current_output, sigmoid);
+        // Apply the correct activation function for the layer
+        switch (nn->layers[i].activation) {
+            case RELU:
+                matrix_map(current_output, relu);
+                break;
+            case SIGMOID:
+            default:
+                matrix_map(current_output, sigmoid);
+                break;
+        }
 
         // Free the matrix from the previous step
         matrix_destroy(prev_output);
@@ -125,15 +137,6 @@ void nn_print(const NeuralNetwork* nn) {
     }
 }
 
-// Helper function to apply the derivative of the sigmoid function element-wise
-void matrix_map_sigmoid_derivative(Matrix* m) {
-    for (int i = 0; i < m->rows; i++) {
-        for (int j = 0; j < m->cols; j++) {
-            m->data[i][j] = sigmoid_derivative(m->data[i][j]);
-        }
-    }
-}
-
 void nn_train(NeuralNetwork* nn, const Matrix* input, const Matrix* target, double learning_rate) {
     // --- 1. Forward Pass ---
     // We need to store the outputs of each layer for backpropagation
@@ -144,7 +147,18 @@ void nn_train(NeuralNetwork* nn, const Matrix* input, const Matrix* target, doub
         Matrix* prev_output = layer_outputs[i];
         Matrix* current_output = matrix_multiply(prev_output, nn->layers[i].weights);
         matrix_add_bias(current_output, nn->layers[i].biases);
-        matrix_map(current_output, sigmoid);
+
+        // Apply the correct activation function for the layer
+        switch (nn->layers[i].activation) {
+            case RELU:
+                matrix_map(current_output, relu);
+                break;
+            case SIGMOID:
+            default:
+                matrix_map(current_output, sigmoid);
+                break;
+        }
+
         layer_outputs[i + 1] = current_output;
     }
 
@@ -156,7 +170,16 @@ void nn_train(NeuralNetwork* nn, const Matrix* input, const Matrix* target, doub
     for (int i = nn->num_layers - 2; i >= 0; i--) {
         // Calculate gradient (delta rule)
         Matrix* gradients = matrix_copy(layer_outputs[i + 1]);
-        matrix_map_sigmoid_derivative(gradients); // This is f'(net)
+        // Apply the derivative of the correct activation function
+        switch (nn->layers[i].activation) {
+            case RELU:
+                matrix_map(gradients, relu_derivative);
+                break;
+            case SIGMOID:
+            default:
+                matrix_map(gradients, sigmoid_derivative);
+                break;
+        }
 
         // Multiply by error to get the final delta
         Matrix* temp_gradients = gradients;
@@ -225,6 +248,8 @@ void nn_save(const NeuralNetwork* nn, const char* filepath) {
         for (int r = 0; r < biases->rows; r++) {
             fwrite(biases->data[r], sizeof(double), biases->cols, file);
         }
+        // Save the activation type for the layer
+        fwrite(&nn->layers[i].activation, sizeof(ActivationType), 1, file);
     }
 
     fclose(file);
@@ -244,7 +269,9 @@ NeuralNetwork* nn_load(const char* filepath) {
     fread(topology, sizeof(int), num_layers, file);
 
     // Create a new network with the loaded topology (without randomizing weights)
-    NeuralNetwork* nn = nn_create(topology, num_layers);
+    // Note: This assumes the loaded model used SIGMOID. A future file format
+    // version could store the activation functions.
+    NeuralNetwork* nn = nn_create(topology, num_layers, NULL);
     free(topology); // nn_create makes its own copy
     if (!nn) {
         fclose(file);
@@ -261,8 +288,18 @@ NeuralNetwork* nn_load(const char* filepath) {
         for (int r = 0; r < biases->rows; r++) {
             fread(biases->data[r], sizeof(double), biases->cols, file);
         }
+        // Load the activation type for the layer
+        fread(&nn->layers[i].activation, sizeof(ActivationType), 1, file);
     }
 
     fclose(file);
     return nn;
+}
+
+ActivationType nn_get_layer_activation(const NeuralNetwork* nn, int layer_index) {
+    if (nn && layer_index >= 0 && layer_index < nn->num_layers - 1) {
+        return nn->layers[layer_index].activation;
+    }
+    // Return a default/error value if indices are out of bounds
+    return -1; // Or some other indicator of an error
 }

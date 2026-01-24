@@ -1,11 +1,13 @@
 import random
 import math
-from python_interface.carl import NeuralNetwork, Matrix
+from python_interface.carl import NeuralNetwork, Matrix, ActivationType
 
 def main():
     # --- 1. Define el problema y la configuración de la red ---
     topology = [2, 3, 1]
-    nn = NeuralNetwork(topology)
+    # Use ReLU for the hidden layer and Sigmoid for the output layer
+    activations = [ActivationType.RELU, ActivationType.SIGMOID]
+    nn = NeuralNetwork(topology, activations=activations)
 
     # Datos de entrenamiento para el problema XOR
     training_data = [

@@ -1,5 +1,11 @@
 import ctypes
 import os
+from enum import IntEnum
+
+# Enum for activation functions, must match the C enum
+class ActivationType(IntEnum):
+    SIGMOID = 0
+    RELU = 1
 
 # --- Load the C library ---
 # Construct the path to the shared library file
@@ -42,7 +48,7 @@ carl_lib.matrix_multiply.restype = ctypes.POINTER(CMatrix)
 
 
 # Neural Network functions
-carl_lib.nn_create.argtypes = [ctypes.POINTER(ctypes.c_int), ctypes.c_int]
+carl_lib.nn_create.argtypes = [ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.POINTER(ctypes.c_int)]
 carl_lib.nn_create.restype = ctypes.POINTER(CNeuralNetwork)
 
 carl_lib.nn_destroy.argtypes = [ctypes.POINTER(CNeuralNetwork)]
@@ -62,6 +68,9 @@ carl_lib.nn_save.restype = None
 
 carl_lib.nn_load.argtypes = [ctypes.c_char_p]
 carl_lib.nn_load.restype = ctypes.POINTER(CNeuralNetwork)
+
+carl_lib.nn_get_layer_activation.argtypes = [ctypes.POINTER(CNeuralNetwork), ctypes.c_int]
+carl_lib.nn_get_layer_activation.restype = ctypes.c_int # Corresponds to the enum
 
 
 # --- Python Wrapper Classes ---
@@ -111,11 +120,20 @@ class Matrix:
 
 class NeuralNetwork:
     """A Python wrapper for the C NeuralNetwork structure."""
-    def __init__(self, topology):
+    def __init__(self, topology, activations=None):
         self.topology = topology
         num_layers = len(topology)
         c_topology = (ctypes.c_int * num_layers)(*topology)
-        self.ptr = carl_lib.nn_create(c_topology, num_layers)
+
+        c_activations = None
+        if activations:
+            if len(activations) != num_layers - 1:
+                raise ValueError("The number of activations must match the number of layers minus one.")
+            # We have num_layers - 1 layers with activations
+            num_activations = len(activations)
+            c_activations = (ctypes.c_int * num_activations)(*[act.value for act in activations])
+
+        self.ptr = carl_lib.nn_create(c_topology, num_layers, c_activations)
 
     def __del__(self):
         if hasattr(self, 'ptr') and self.ptr and carl_lib:
@@ -169,3 +187,11 @@ class NeuralNetwork:
         new_nn.topology = topology
         new_nn.ptr = nn_ptr
         return new_nn
+
+    def get_layer_activation(self, layer_index):
+        """Gets the activation function type for a specific layer."""
+        if not 0 <= layer_index < len(self.topology) - 1:
+            raise IndexError("Layer index is out of bounds.")
+
+        act_enum_val = carl_lib.nn_get_layer_activation(self.ptr, layer_index)
+        return ActivationType(act_enum_val)
