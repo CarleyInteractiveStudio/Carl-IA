@@ -33,5 +33,11 @@ void nn_print(const NeuralNetwork* nn);
 // Performs a single training step (forward, backpropagation, and weight update)
 void nn_train(NeuralNetwork* nn, const Matrix* input, const Matrix* target, double learning_rate);
 
+// Saves the neural network's weights and biases to a file
+void nn_save(const NeuralNetwork* nn, const char* filepath);
+
+// Loads a neural network from a file
+NeuralNetwork* nn_load(const char* filepath);
+
 
 #endif // NEURAL_NET_H

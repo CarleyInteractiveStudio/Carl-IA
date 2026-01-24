@@ -17,9 +17,14 @@ class CMatrix(ctypes.Structure):
                 ("cols", ctypes.c_int),
                 ("data", ctypes.POINTER(ctypes.POINTER(ctypes.c_double)))]
 
-class CNeuralNetwork(ctypes.Structure):
-    # Opaque structure for now, we only need the pointer
+class CLayer(ctypes.Structure):
+    # Dummy definition, we only need the pointer type
     pass
+
+class CNeuralNetwork(ctypes.Structure):
+    _fields_ = [("num_layers", ctypes.c_int),
+                ("topology", ctypes.POINTER(ctypes.c_int)),
+                ("layers", ctypes.POINTER(CLayer))]
 
 # --- Define Argument and Return Types for C Functions ---
 # Matrix functions
@@ -51,6 +56,12 @@ carl_lib.nn_print.restype = None
 
 carl_lib.nn_train.argtypes = [ctypes.POINTER(CNeuralNetwork), ctypes.POINTER(CMatrix), ctypes.POINTER(CMatrix), ctypes.c_double]
 carl_lib.nn_train.restype = None
+
+carl_lib.nn_save.argtypes = [ctypes.POINTER(CNeuralNetwork), ctypes.c_char_p]
+carl_lib.nn_save.restype = None
+
+carl_lib.nn_load.argtypes = [ctypes.c_char_p]
+carl_lib.nn_load.restype = ctypes.POINTER(CNeuralNetwork)
 
 
 # --- Python Wrapper Classes ---
@@ -131,3 +142,30 @@ class NeuralNetwork:
     def __str__(self):
         carl_lib.nn_print(self.ptr)
         return f"<NeuralNetwork at {hex(id(self))}>"
+
+    def save(self, filepath):
+        """Saves the neural network to a file."""
+        # Convert Python string to bytes for C
+        c_filepath = filepath.encode('utf-8')
+        carl_lib.nn_save(self.ptr, c_filepath)
+
+    @classmethod
+    def load(cls, filepath):
+        """Loads a neural network from a file."""
+        c_filepath = filepath.encode('utf-8')
+        nn_ptr = carl_lib.nn_load(c_filepath)
+        if not nn_ptr:
+            raise Exception(f"Failed to load neural network from {filepath}")
+
+        # We need to find the topology to create the Python object correctly.
+        # This is a bit of a workaround as the C struct is opaque to Python.
+        # We'll read it directly from the C pointer. A better way would be
+        # to have a C function `nn_get_topology`.
+        num_layers = nn_ptr.contents.num_layers
+        topology = [nn_ptr.contents.topology[i] for i in range(num_layers)]
+
+        # Create a new Python NeuralNetwork instance without calling nn_create again
+        new_nn = cls.__new__(cls)
+        new_nn.topology = topology
+        new_nn.ptr = nn_ptr
+        return new_nn

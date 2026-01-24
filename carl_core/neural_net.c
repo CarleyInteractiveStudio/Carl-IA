@@ -203,3 +203,66 @@ void nn_train(NeuralNetwork* nn, const Matrix* input, const Matrix* target, doub
     }
     free(layer_outputs);
 }
+
+void nn_save(const NeuralNetwork* nn, const char* filepath) {
+    FILE* file = fopen(filepath, "wb");
+    if (!file) {
+        fprintf(stderr, "Error: Could not open file for writing: %s\n", filepath);
+        return;
+    }
+
+    // Write the topology (number of layers and neuron counts)
+    fwrite(&nn->num_layers, sizeof(int), 1, file);
+    fwrite(nn->topology, sizeof(int), nn->num_layers, file);
+
+    // Write the weights and biases for each layer
+    for (int i = 0; i < nn->num_layers - 1; i++) {
+        Matrix* weights = nn->layers[i].weights;
+        Matrix* biases = nn->layers[i].biases;
+        for (int r = 0; r < weights->rows; r++) {
+            fwrite(weights->data[r], sizeof(double), weights->cols, file);
+        }
+        for (int r = 0; r < biases->rows; r++) {
+            fwrite(biases->data[r], sizeof(double), biases->cols, file);
+        }
+    }
+
+    fclose(file);
+}
+
+NeuralNetwork* nn_load(const char* filepath) {
+    FILE* file = fopen(filepath, "rb");
+    if (!file) {
+        fprintf(stderr, "Error: Could not open file for reading: %s\n", filepath);
+        return NULL;
+    }
+
+    // Read the topology
+    int num_layers;
+    fread(&num_layers, sizeof(int), 1, file);
+    int* topology = (int*)malloc(num_layers * sizeof(int));
+    fread(topology, sizeof(int), num_layers, file);
+
+    // Create a new network with the loaded topology (without randomizing weights)
+    NeuralNetwork* nn = nn_create(topology, num_layers);
+    free(topology); // nn_create makes its own copy
+    if (!nn) {
+        fclose(file);
+        return NULL;
+    }
+
+    // Read the weights and biases
+    for (int i = 0; i < nn->num_layers - 1; i++) {
+        Matrix* weights = nn->layers[i].weights;
+        Matrix* biases = nn->layers[i].biases;
+        for (int r = 0; r < weights->rows; r++) {
+            fread(weights->data[r], sizeof(double), weights->cols, file);
+        }
+        for (int r = 0; r < biases->rows; r++) {
+            fread(biases->data[r], sizeof(double), biases->cols, file);
+        }
+    }
+
+    fclose(file);
+    return nn;
+}
