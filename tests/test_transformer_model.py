@@ -43,13 +43,14 @@ class TestTransformerModel(unittest.TestCase):
             self.assertIsInstance(output_matrix, Matrix, "Forward pass should return a Matrix object.")
 
             # 3. Check output dimensions
+            # The output of the full model should have dimensions (sequence_length, vocab_size)
             self.assertEqual(output_matrix.rows, sequence_length, "Output matrix should have rows equal to sequence length.")
-            self.assertEqual(output_matrix.cols, d_model, "Output matrix should have columns equal to d_model.")
+            self.assertEqual(output_matrix.cols, vocab_size, "Output matrix should have columns equal to vocab_size.")
 
             # 4. Check that output data is accessible (simple sanity check)
             output_list = output_matrix.to_list()
             self.assertEqual(len(output_list), sequence_length)
-            self.assertEqual(len(output_list[0]), d_model)
+            self.assertEqual(len(output_list[0]), vocab_size)
 
         finally:
             # The __del__ method in the wrapper will handle cleanup

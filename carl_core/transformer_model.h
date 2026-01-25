@@ -15,6 +15,9 @@ typedef struct {
     EmbeddingLayer* embedding_layer;
     Matrix* positional_encoding;
     TransformerBlock** blocks; // Array of pointers to TransformerBlock
+
+    // Final linear layer to map the model's output to vocabulary size
+    Matrix* final_linear_layer;
 } TransformerModel;
 
 // --- Function Declarations ---

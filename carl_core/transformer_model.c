@@ -57,6 +57,21 @@ TransformerModel* transformer_model_create(int vocab_size, int d_model, int num_
         }
     }
 
+    // 4. Create Final Linear Layer
+    model->final_linear_layer = matrix_create(d_model, vocab_size);
+    if (!model->final_linear_layer) {
+        fprintf(stderr, "Error: Failed to create final linear layer.\n");
+        for (int i = 0; i < num_blocks; i++) {
+            transformer_block_destroy(model->blocks[i]);
+        }
+        free(model->blocks);
+        matrix_destroy(model->positional_encoding);
+        embedding_layer_destroy(model->embedding_layer);
+        free(model);
+        return NULL;
+    }
+    matrix_randomize(model->final_linear_layer);
+
     return model;
 }
 
@@ -69,6 +84,7 @@ void transformer_model_destroy(TransformerModel* model) {
         transformer_block_destroy(model->blocks[i]);
     }
     free(model->blocks);
+    matrix_destroy(model->final_linear_layer);
     free(model);
 }
 
@@ -90,18 +106,18 @@ Matrix* transformer_model_forward(const TransformerModel* model, const int* toke
     }
 
     // 3. Pass through Transformer Blocks
-    Matrix* current_output = embeddings; // Start with the embeddings + PE
+    Matrix* block_output = embeddings; // Start with the embeddings + PE
     Matrix* prev_output = NULL;
 
     for (int i = 0; i < model->num_blocks; i++) {
-        prev_output = current_output;
-        current_output = transformer_block_forward(model->blocks[i], prev_output);
+        prev_output = block_output;
+        block_output = transformer_block_forward(model->blocks[i], prev_output);
 
         if(prev_output != embeddings) { // Avoid double-freeing the initial embeddings matrix
             matrix_destroy(prev_output);
         }
 
-        if (!current_output) {
+        if (!block_output) {
             fprintf(stderr, "Error: Forward pass failed at Transformer block %d.\n", i);
             matrix_destroy(embeddings);
             return NULL;
@@ -111,6 +127,19 @@ Matrix* transformer_model_forward(const TransformerModel* model, const int* toke
     // The initial embeddings matrix has been used and its content passed along, so we can destroy it.
     if(model->num_blocks > 0) matrix_destroy(embeddings);
 
+    // 4. Final Linear Layer (Language Head)
+    Matrix* logits = matrix_multiply(block_output, model->final_linear_layer);
+    if (!logits) {
+        fprintf(stderr, "Error: Final linear layer multiplication failed.\n");
+        matrix_destroy(block_output);
+        return NULL;
+    }
 
-    return current_output;
+    // 5. Apply Softmax to get probabilities
+    matrix_softmax(logits);
+
+    // Cleanup
+    matrix_destroy(block_output);
+
+    return logits;
 }
