@@ -85,6 +85,16 @@ carl_lib.embedding_layer_destroy.restype = None
 carl_lib.embedding_layer_forward.argtypes = [ctypes.POINTER(CEmbeddingLayer), ctypes.POINTER(ctypes.c_int), ctypes.c_int]
 carl_lib.embedding_layer_forward.restype = ctypes.POINTER(CMatrix)
 
+# --- Define Argument and Return Types for new C Functions ---
+carl_lib.matrix_scale.argtypes = [ctypes.POINTER(CMatrix), ctypes.c_double]
+carl_lib.matrix_scale.restype = None
+
+carl_lib.matrix_softmax.argtypes = [ctypes.POINTER(CMatrix)]
+carl_lib.matrix_softmax.restype = None
+
+carl_lib.scaled_dot_product_attention.argtypes = [ctypes.POINTER(CMatrix), ctypes.POINTER(CMatrix), ctypes.POINTER(CMatrix)]
+carl_lib.scaled_dot_product_attention.restype = ctypes.POINTER(CMatrix)
+
 
 # --- Python Wrapper Classes ---
 
@@ -234,3 +244,25 @@ class EmbeddingLayer:
 
         # Wrap the returned CMatrix pointer in a Python Matrix object
         return Matrix(rows=0, cols=0, _ptr=result_ptr)
+
+
+def scaled_dot_product_attention(query, key, value):
+    """
+    High-level Python wrapper for the Scaled Dot-Product Attention mechanism.
+
+    Args:
+        query (Matrix): The Query matrix.
+        key (Matrix): The Key matrix.
+        value (Matrix): The Value matrix.
+
+    Returns:
+        Matrix: The output of the attention mechanism.
+    """
+    if not all(isinstance(m, Matrix) for m in [query, key, value]):
+        raise TypeError("Inputs query, key, and value must all be Matrix objects.")
+
+    result_ptr = carl_lib.scaled_dot_product_attention(query.ptr, key.ptr, value.ptr)
+    if not result_ptr:
+        raise Exception("Scaled dot-product attention failed in C.")
+
+    return Matrix(rows=0, cols=0, _ptr=result_ptr)

@@ -45,4 +45,10 @@ Matrix* matrix_transpose(const Matrix* m);
 // Performs element-wise multiplication (Hadamard product)
 Matrix* matrix_elementwise_multiply(const Matrix* a, const Matrix* b);
 
+// Multiplies every element of a matrix by a scalar value.
+void matrix_scale(Matrix* m, double scalar);
+
+// Applies the softmax function to each row of the matrix.
+void matrix_softmax(Matrix* m);
+
 #endif // MATRIX_H

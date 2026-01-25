@@ -1,6 +1,7 @@
 #include "matrix.h"
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 // Helper function to allocate a 2D array for the matrix data
 double** allocate_data(int rows, int cols) {
@@ -54,6 +55,37 @@ void matrix_randomize(Matrix* m) {
         for (int j = 0; j < m->cols; j++) {
             // Generate random double between -1.0 and 1.0
             m->data[i][j] = ((double)rand() / (double)RAND_MAX) * 2.0 - 1.0;
+        }
+    }
+}
+
+void matrix_scale(Matrix* m, double scalar) {
+    for (int i = 0; i < m->rows; i++) {
+        for (int j = 0; j < m->cols; j++) {
+            m->data[i][j] *= scalar;
+        }
+    }
+}
+
+void matrix_softmax(Matrix* m) {
+    for (int i = 0; i < m->rows; i++) {
+        // Find the maximum value in the row for numerical stability
+        double max_val = m->data[i][0];
+        for (int j = 1; j < m->cols; j++) {
+            if (m->data[i][j] > max_val) {
+                max_val = m->data[i][j];
+            }
+        }
+
+        // Calculate the sum of exponentials
+        double sum = 0.0;
+        for (int j = 0; j < m->cols; j++) {
+            sum += exp(m->data[i][j] - max_val);
+        }
+
+        // Normalize the row
+        for (int j = 0; j < m->cols; j++) {
+            m->data[i][j] = exp(m->data[i][j] - max_val) / sum;
         }
     }
 }
