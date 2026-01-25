@@ -43,20 +43,21 @@ Hemos construido con éxito la base fundamental de nuestra biblioteca:
 
 ## Hoja de Ruta (Roadmap)
 
-Nuestro próximo objetivo es hacer que nuestra red pueda aprender. A partir de ahí, construiremos los bloques necesarios para llegar a la arquitectura Transformer.
+Hemos completado las bases del aprendizaje y los componentes individuales del Transformer. Ahora, nuestro objetivo es ensamblarlos para crear un modelo de lenguaje funcional.
 
--   **Hito 2: Aprendizaje (Retropropagación)**
-    -   [ ] Implementar la derivada de la función de activación (Sigmoide).
-    -   [ ] Implementar el algoritmo de **retropropagación (Backpropagation)** en C para calcular los gradientes.
-    -   [ ] Implementar la **actualización de pesos y sesgos** (descenso de gradiente) en C.
-    -   [ ] Crear un bucle de entrenamiento en Python para entrenar la red para resolver el problema XOR.
+-   **Hito 2: Aprendizaje y Componentes Clave - ¡Completado!**
+    -   ✅ Implementado el algoritmo de **retropropagación (Backpropagation)** para el entrenamiento.
+    -   ✅ Añadida la capacidad de **guardar y cargar modelos** entrenados.
+    -   ✅ Implementada una **capa de Embedding** para convertir tokens en vectores.
+    -   ✅ Implementado el mecanismo de **Atención (Scaled Dot-Product Attention)**.
+    -   ✅ Creado un bucle de entrenamiento en Python (`train_xor.py`) que demuestra el aprendizaje.
 
--   **Hito 3: Hacia un Transformer**
-    -   [ ] Implementar más funciones de activación (ej. ReLU, Softmax).
-    -   [ ] Implementar la capacidad de guardar y cargar modelos entrenados.
-    -   [ ] Diseñar e implementar una capa de **Embedding** para procesar texto.
-    -   [ ] Implementar la capa de **Atención (Attention)**, el corazón del Transformer.
-    -   [ ] Ensamblar la arquitectura completa del Transformer (Encoder/Decoder).
+-   **Hito 3: Ensamblaje del Modelo Transformer**
+    -   [ ] Diseñar una estructura `TransformerBlock` que combine atención y una red *feed-forward*.
+    -   [ ] Implementar la **codificación posicional (Positional Encoding)** para dar al modelo un sentido del orden de las palabras.
+    -   [ ] Ensamblar los bloques en un `TransformerModel` completo de tipo **solo-decodificador** (similar a GPT).
+    -   [ ] Integrar el modelo completo con la interfaz de Python.
+    -   [ ] Crear una prueba de integración para el modelo Transformer.
 
 ## Cómo Compilar y Probar
 

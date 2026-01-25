@@ -35,10 +35,21 @@ class CNeuralNetwork(ctypes.Structure):
 class CEmbeddingLayer(ctypes.Structure):
     _fields_ = [("embeddings", ctypes.POINTER(CMatrix))]
 
+class CTransformerBlock(ctypes.Structure):
+    # Dummy definition, fields are not needed for pointer access in Python
+    pass
+
+class CTransformerModel(ctypes.Structure):
+    # Dummy definition
+    pass
+
 # --- Define Argument and Return Types for C Functions ---
 # Matrix functions
 carl_lib.matrix_create.argtypes = [ctypes.c_int, ctypes.c_int]
 carl_lib.matrix_create.restype = ctypes.POINTER(CMatrix)
+
+carl_lib.matrix_create_positional_encoding.argtypes = [ctypes.c_int, ctypes.c_int]
+carl_lib.matrix_create_positional_encoding.restype = ctypes.POINTER(CMatrix)
 
 carl_lib.matrix_destroy.argtypes = [ctypes.POINTER(CMatrix)]
 carl_lib.matrix_destroy.restype = None
@@ -48,6 +59,9 @@ carl_lib.matrix_print.restype = None
 
 carl_lib.matrix_multiply.argtypes = [ctypes.POINTER(CMatrix), ctypes.POINTER(CMatrix)]
 carl_lib.matrix_multiply.restype = ctypes.POINTER(CMatrix)
+
+carl_lib.matrix_add.argtypes = [ctypes.POINTER(CMatrix), ctypes.POINTER(CMatrix)]
+carl_lib.matrix_add.restype = ctypes.POINTER(CMatrix)
 
 
 # Neural Network functions
@@ -94,6 +108,26 @@ carl_lib.matrix_softmax.restype = None
 
 carl_lib.scaled_dot_product_attention.argtypes = [ctypes.POINTER(CMatrix), ctypes.POINTER(CMatrix), ctypes.POINTER(CMatrix)]
 carl_lib.scaled_dot_product_attention.restype = ctypes.POINTER(CMatrix)
+
+# Transformer Block functions
+carl_lib.transformer_block_create.argtypes = [ctypes.c_int, ctypes.c_int]
+carl_lib.transformer_block_create.restype = ctypes.POINTER(CTransformerBlock)
+
+carl_lib.transformer_block_destroy.argtypes = [ctypes.POINTER(CTransformerBlock)]
+carl_lib.transformer_block_destroy.restype = None
+
+carl_lib.transformer_block_forward.argtypes = [ctypes.POINTER(CTransformerBlock), ctypes.POINTER(CMatrix)]
+carl_lib.transformer_block_forward.restype = ctypes.POINTER(CMatrix)
+
+# Transformer Model functions
+carl_lib.transformer_model_create.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int]
+carl_lib.transformer_model_create.restype = ctypes.POINTER(CTransformerModel)
+
+carl_lib.transformer_model_destroy.argtypes = [ctypes.POINTER(CTransformerModel)]
+carl_lib.transformer_model_destroy.restype = None
+
+carl_lib.transformer_model_forward.argtypes = [ctypes.POINTER(CTransformerModel), ctypes.POINTER(ctypes.c_int), ctypes.c_int]
+carl_lib.transformer_model_forward.restype = ctypes.POINTER(CMatrix)
 
 
 # --- Python Wrapper Classes ---
@@ -266,3 +300,30 @@ def scaled_dot_product_attention(query, key, value):
         raise Exception("Scaled dot-product attention failed in C.")
 
     return Matrix(rows=0, cols=0, _ptr=result_ptr)
+
+class TransformerModel:
+    """A Python wrapper for the C TransformerModel structure."""
+    def __init__(self, vocab_size, d_model, num_blocks, max_len, ffn_hidden_dim):
+        self.ptr = carl_lib.transformer_model_create(
+            vocab_size, d_model, num_blocks, max_len, ffn_hidden_dim
+        )
+        if not self.ptr:
+            raise MemoryError("Failed to create TransformerModel in C.")
+
+    def __del__(self):
+        if hasattr(self, 'ptr') and self.ptr and carl_lib:
+            carl_lib.transformer_model_destroy(self.ptr)
+
+    def forward(self, token_ids):
+        """Performs a forward pass through the transformer model."""
+        if not isinstance(token_ids, list):
+            raise TypeError("Input token_ids must be a list of integers.")
+
+        sequence_length = len(token_ids)
+        c_token_ids = (ctypes.c_int * sequence_length)(*token_ids)
+
+        result_ptr = carl_lib.transformer_model_forward(self.ptr, c_token_ids, sequence_length)
+        if not result_ptr:
+            raise Exception("TransformerModel forward pass failed in C.")
+
+        return Matrix(rows=0, cols=0, _ptr=result_ptr)
