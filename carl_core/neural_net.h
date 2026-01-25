@@ -21,7 +21,7 @@ typedef struct {
 // --- Function Declarations ---
 
 // Creates and initializes a new neural network based on a given topology
-NeuralNetwork* nn_create(const int* topology, int num_layers, const ActivationType* activations);
+NeuralNetwork* nn_create(const int* topology, int num_layers, const int* activations);
 
 // Frees all memory associated with the neural network
 void nn_destroy(NeuralNetwork* nn);

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h> // For memcpy
 
-NeuralNetwork* nn_create(const int* topology, int num_layers, const ActivationType* activations) {
+NeuralNetwork* nn_create(const int* topology, int num_layers, const int* activations) {
     if (num_layers < 2) {
         fprintf(stderr, "Error: A neural network must have at least 2 layers (input and output).\n");
         return NULL;
@@ -53,7 +53,7 @@ NeuralNetwork* nn_create(const int* topology, int num_layers, const ActivationTy
 
         // Assign the activation function for this layer
         // Default to SIGMOID if no activations are provided
-        nn->layers[i].activation = activations ? activations[i] : SIGMOID;
+        nn->layers[i].activation = activations ? (ActivationType)activations[i] : SIGMOID;
 
         // Randomize the weights and biases
         matrix_randomize(nn->layers[i].weights);

@@ -32,6 +32,9 @@ class CNeuralNetwork(ctypes.Structure):
                 ("topology", ctypes.POINTER(ctypes.c_int)),
                 ("layers", ctypes.POINTER(CLayer))]
 
+class CEmbeddingLayer(ctypes.Structure):
+    _fields_ = [("embeddings", ctypes.POINTER(CMatrix))]
+
 # --- Define Argument and Return Types for C Functions ---
 # Matrix functions
 carl_lib.matrix_create.argtypes = [ctypes.c_int, ctypes.c_int]
@@ -71,6 +74,16 @@ carl_lib.nn_load.restype = ctypes.POINTER(CNeuralNetwork)
 
 carl_lib.nn_get_layer_activation.argtypes = [ctypes.POINTER(CNeuralNetwork), ctypes.c_int]
 carl_lib.nn_get_layer_activation.restype = ctypes.c_int # Corresponds to the enum
+
+# Embedding Layer functions
+carl_lib.embedding_layer_create.argtypes = [ctypes.c_int, ctypes.c_int]
+carl_lib.embedding_layer_create.restype = ctypes.POINTER(CEmbeddingLayer)
+
+carl_lib.embedding_layer_destroy.argtypes = [ctypes.POINTER(CEmbeddingLayer)]
+carl_lib.embedding_layer_destroy.restype = None
+
+carl_lib.embedding_layer_forward.argtypes = [ctypes.POINTER(CEmbeddingLayer), ctypes.POINTER(ctypes.c_int), ctypes.c_int]
+carl_lib.embedding_layer_forward.restype = ctypes.POINTER(CMatrix)
 
 
 # --- Python Wrapper Classes ---
@@ -195,3 +208,29 @@ class NeuralNetwork:
 
         act_enum_val = carl_lib.nn_get_layer_activation(self.ptr, layer_index)
         return ActivationType(act_enum_val)
+
+class EmbeddingLayer:
+    """A Python wrapper for the C EmbeddingLayer structure."""
+    def __init__(self, vocab_size, embedding_dim):
+        self.ptr = carl_lib.embedding_layer_create(vocab_size, embedding_dim)
+        if not self.ptr:
+            raise MemoryError("Failed to create EmbeddingLayer in C.")
+
+    def __del__(self):
+        if hasattr(self, 'ptr') and self.ptr and carl_lib:
+            carl_lib.embedding_layer_destroy(self.ptr)
+
+    def forward(self, token_ids):
+        """Performs a forward pass, converting token IDs to vectors."""
+        if not isinstance(token_ids, list):
+            raise TypeError("Input token_ids must be a list of integers.")
+
+        sequence_length = len(token_ids)
+        c_token_ids = (ctypes.c_int * sequence_length)(*token_ids)
+
+        result_ptr = carl_lib.embedding_layer_forward(self.ptr, c_token_ids, sequence_length)
+        if not result_ptr:
+            raise Exception("EmbeddingLayer forward pass failed in C.")
+
+        # Wrap the returned CMatrix pointer in a Python Matrix object
+        return Matrix(rows=0, cols=0, _ptr=result_ptr)
