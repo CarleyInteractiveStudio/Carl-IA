@@ -1,0 +1,48 @@
+#ifndef NEURAL_NET_H
+#define NEURAL_NET_H
+
+#include "matrix.h"
+#include "activations.h"
+
+// Represents a single layer in the neural network
+typedef struct {
+    Matrix* weights; // Matrix of weights for the connections to the previous layer
+    Matrix* biases;  // Vector of biases for each neuron in this layer
+    ActivationType activation; // The activation function for this layer
+} Layer;
+
+// Represents the entire neural network
+typedef struct {
+    int num_layers;
+    int* topology; // Array defining the number of neurons in each layer (e.g., [2, 3, 1])
+    Layer* layers; // Array of layers
+} NeuralNetwork;
+
+// --- Function Declarations ---
+
+// Creates and initializes a new neural network based on a given topology
+NeuralNetwork* nn_create(const int* topology, int num_layers, const int* activations);
+
+// Frees all memory associated with the neural network
+void nn_destroy(NeuralNetwork* nn);
+
+// Performs forward propagation through the entire network
+Matrix* nn_forward(NeuralNetwork* nn, const Matrix* input);
+
+// Prints the network structure and weights (for debugging)
+void nn_print(const NeuralNetwork* nn);
+
+// Performs a single training step (forward, backpropagation, and weight update)
+void nn_train(NeuralNetwork* nn, const Matrix* input, const Matrix* target, double learning_rate);
+
+// Saves the neural network's weights and biases to a file
+void nn_save(const NeuralNetwork* nn, const char* filepath);
+
+// Loads a neural network from a file
+NeuralNetwork* nn_load(const char* filepath);
+
+// Gets the activation function type for a specific layer
+ActivationType nn_get_layer_activation(const NeuralNetwork* nn, int layer_index);
+
+
+#endif // NEURAL_NET_H
