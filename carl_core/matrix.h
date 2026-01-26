@@ -15,6 +15,9 @@ typedef struct {
 // Creates a new matrix with the given dimensions
 Matrix* matrix_create(int rows, int cols);
 
+// Creates a matrix with sinusoidal positional encodings
+Matrix* matrix_create_positional_encoding(int max_len, int d_model);
+
 // Frees the memory allocated for a matrix
 void matrix_destroy(Matrix* m);
 
@@ -38,6 +41,9 @@ Matrix* matrix_copy(const Matrix* src);
 
 // Subtracts matrix B from matrix A and returns the result as a new matrix
 Matrix* matrix_subtract(const Matrix* a, const Matrix* b);
+
+// Adds matrix B to matrix A and returns the result as a new matrix
+Matrix* matrix_add(const Matrix* a, const Matrix* b);
 
 // Transposes a matrix
 Matrix* matrix_transpose(const Matrix* m);

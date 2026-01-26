@@ -119,6 +119,23 @@ Matrix* matrix_subtract(const Matrix* a, const Matrix* b) {
     return result;
 }
 
+Matrix* matrix_add(const Matrix* a, const Matrix* b) {
+    if (a->rows != b->rows || a->cols != b->cols) {
+        fprintf(stderr, "Error: Matrix dimensions must match for addition.\n");
+        return NULL;
+    }
+
+    Matrix* result = matrix_create(a->rows, a->cols);
+    if (!result) return NULL;
+
+    for (int i = 0; i < a->rows; i++) {
+        for (int j = 0; j < a->cols; j++) {
+            result->data[i][j] = a->data[i][j] + b->data[i][j];
+        }
+    }
+    return result;
+}
+
 Matrix* matrix_transpose(const Matrix* m) {
     Matrix* result = matrix_create(m->cols, m->rows);
     if (!result) return NULL;
@@ -201,4 +218,20 @@ void matrix_map(Matrix* m, double (*func)(double)) {
             m->data[i][j] = func(m->data[i][j]);
         }
     }
+}
+
+Matrix* matrix_create_positional_encoding(int max_len, int d_model) {
+    Matrix* pe = matrix_create(max_len, d_model);
+    if (!pe) return NULL;
+
+    for (int pos = 0; pos < max_len; pos++) {
+        for (int i = 0; i < d_model; i++) {
+            if (i % 2 == 0) {
+                pe->data[pos][i] = sin(pos / pow(10000.0, (2.0 * (i / 2)) / d_model));
+            } else {
+                pe->data[pos][i] = cos(pos / pow(10000.0, (2.0 * (i / 2)) / d_model));
+            }
+        }
+    }
+    return pe;
 }
