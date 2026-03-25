@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Settings, User, Sparkles, MessageSquare, Info, Lock, Loader2 } from 'lucide-react';
+import { Send, Settings, User, MessageSquare, Info, Lock, Loader2 } from 'lucide-react';
 import { cn } from './lib/utils';
 
 interface Message {
@@ -86,7 +86,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative h-screen w-full bg-[#020202] overflow-hidden text-white selection:bg-yellow-400/30 font-sans">
+    <div className="relative h-screen w-full bg-[#020202] overflow-hidden text-white selection:bg-blue-500/30 font-sans">
       {/* Background Animated Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -125,16 +125,16 @@ export default function App() {
             className="flex items-center gap-3"
           >
             <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-              <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-2xl shadow-yellow-500/20">
-                <Sparkles className="text-black" size={24} />
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-2xl shadow-blue-500/20 border border-white/10">
+                <img src="/carl_logo.jpeg" alt="Carl Logo" className="w-full h-full object-cover" />
               </div>
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-gray-500">
                 Carl AI
               </h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-yellow-500/80 font-bold">Premium Assistant</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-500/80 font-bold">Premium Assistant</p>
             </div>
           </motion.div>
 
@@ -163,19 +163,23 @@ export default function App() {
                 )}
               >
                 <div className={cn(
-                  "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 shadow-lg backdrop-blur-md transition-transform duration-300 hover:scale-110",
+                  "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 shadow-lg backdrop-blur-md transition-transform duration-300 hover:scale-110 overflow-hidden border border-white/10",
                   msg.role === 'assistant'
-                    ? "bg-forest-dark border border-green-500/20 text-green-400"
-                    : "bg-deep-blue border border-blue-500/20 text-blue-400"
+                    ? "bg-forest-dark"
+                    : "bg-deep-blue text-blue-400"
                 )}>
-                  {msg.role === 'assistant' ? <Sparkles size={18} /> : <User size={18} />}
+                  {msg.role === 'assistant' ? (
+                    <img src="/carl_logo.jpeg" alt="AI" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={18} />
+                  )}
                 </div>
 
                 <div className={cn(
                   "px-5 py-4 rounded-3xl backdrop-blur-[40px] border transition-all duration-300",
                   msg.role === 'assistant'
                     ? "bg-white/5 border-white/10 rounded-tl-none text-gray-100 shadow-xl shadow-black/20"
-                    : "bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-yellow-500/20 rounded-tr-none text-yellow-50/90 shadow-xl shadow-yellow-900/10"
+                    : "bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 rounded-tr-none text-blue-50/90 shadow-xl shadow-blue-900/10"
                 )}>
                   <p className="leading-relaxed text-[15px] md:text-base font-medium whitespace-pre-wrap">{msg.content}</p>
                 </div>
@@ -187,14 +191,15 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex items-center gap-3 mr-auto"
               >
-                <div className="w-9 h-9 rounded-xl bg-forest-dark border border-green-500/20 flex items-center justify-center">
-                  <Loader2 className="animate-spin text-green-400" size={18} />
+                <div className="w-10 h-10 rounded-xl bg-forest-dark border border-white/10 flex items-center justify-center overflow-hidden">
+                  <Loader2 className="animate-spin text-blue-400 absolute z-10" size={18} />
+                  <img src="/carl_logo.jpeg" alt="AI" className="w-full h-full object-cover opacity-50" />
                 </div>
                 <div className="px-5 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl">
                   <div className="flex gap-1">
-                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
                   </div>
                 </div>
               </motion.div>
@@ -209,7 +214,7 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           className="relative group mt-auto"
         >
-          <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500/10 via-blue-500/10 to-green-500/10 rounded-[2rem] blur-xl opacity-0 group-focus-within:opacity-100 transition duration-1000"></div>
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/10 via-blue-500/10 to-blue-500/10 rounded-[2rem] blur-xl opacity-0 group-focus-within:opacity-100 transition duration-1000"></div>
           <div className="relative flex items-center gap-2 p-2.5 rounded-[1.8rem] bg-white/[0.03] border border-white/10 backdrop-blur-[50px] shadow-2xl transition-all duration-300 group-focus-within:border-white/20 group-focus-within:bg-white/[0.05]">
             <input
               type="text"
@@ -221,11 +226,11 @@ export default function App() {
               className="flex-1 bg-transparent border-none outline-none px-5 py-3 text-white placeholder:text-gray-500 md:text-lg"
             />
             <motion.button
-              whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(234, 179, 8, 0.4)" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(37, 99, 235, 0.4)" }}
               whileTap={{ scale: 0.95 }}
               onClick={handleSend}
               disabled={isLoading}
-              className="p-4 rounded-2xl bg-yellow-500 text-black shadow-lg shadow-yellow-500/30 hover:bg-yellow-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="p-4 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               <Send size={22} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </motion.button>
@@ -233,7 +238,7 @@ export default function App() {
         </motion.div>
 
         <footer className="mt-4 text-center">
-          <p className="text-[10px] text-gray-600 font-medium uppercase tracking-widest">Powered by Carl Intelligence • 2024</p>
+          <p className="text-[10px] text-gray-600 font-medium uppercase tracking-widest">Carley Interactive Studio 2026 todos derechos reservados</p>
         </footer>
       </div>
 
@@ -306,7 +311,7 @@ export default function App() {
                       <h3 className="text-2xl font-bold mb-6">Últimas Novedades</h3>
                       <div className="group p-5 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="px-2.5 py-1 rounded-lg bg-yellow-500/10 text-yellow-500 text-[10px] font-black uppercase tracking-tighter">New</div>
+                          <div className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-tighter">New</div>
                           <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Marzo 2024</span>
                         </div>
                         <h4 className="text-lg font-bold mb-2">Interfaz Vision Engine v1</h4>

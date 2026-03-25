@@ -33,4 +33,4 @@ The interface is designed to surpass contemporary standards (like Microsoft's de
 - **Typography:** Bold, high-contrast typography for better readability and a premium feel.
 
 ---
-Built with ❤️ by Jules
+Built with ❤️ by Carley Interactive Studio
