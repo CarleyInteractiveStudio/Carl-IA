@@ -1,13 +1,343 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>app</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carl AI - Premium Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #020202;
+            --blue-accent: #2563eb;
+            --forest-dark: #01160a;
+            --deep-blue: #000814;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            margin: 0;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Glassmorphism Classes */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Background Animations */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 0;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        @keyframes blob-move {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        .animate-blob {
+            animation: blob-move 20s infinite ease-in-out;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Message Animations */
+        .message-enter {
+            animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+
+        @keyframes slide-up {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Input Focus Glow */
+        .input-glow:focus-within {
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.15);
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        /* Settings Modal */
+        #settings-modal {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #settings-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Loader Animation */
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--blue-accent);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Blobs -->
+    <div class="blob animate-blob w-[70vw] h-[70vw] -top-[10%] -left-[10%] bg-[#000814]"></div>
+    <div class="blob animate-blob w-[60vw] h-[60vw] top-[20%] -right-[10%] bg-[#01160a]" style="animation-delay: -5s;"></div>
+    <div class="blob animate-blob w-[80vw] h-[80vw] -bottom-[20%] left-[10%] bg-[#020205]" style="animation-delay: -10s;"></div>
+
+    <!-- Main App Container -->
+    <div class="relative z-10 flex flex-col h-screen max-w-4xl mx-auto px-4 py-4 md:py-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-6 md:mb-10">
+            <div class="flex items-center gap-3">
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                    <div class="relative w-12 h-12 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+                        <img src="carl_logo.jpeg" alt="Carl Logo" class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-gray-500">
+                        Carl AI
+                    </h1>
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-blue-500/80 font-bold">Premium Assistant</p>
+                </div>
+            </div>
+
+            <button onclick="toggleSettings()" class="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all backdrop-blur-2xl shadow-xl group">
+                <i data-lucide="settings" class="w-5 h-5 text-gray-300 group-hover:rotate-90 transition-transform duration-500"></i>
+            </button>
+        </header>
+
+        <!-- Chat Area -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto mb-6 pr-2 space-y-6 custom-scrollbar">
+            <!-- Initial Message -->
+            <div class="flex items-start gap-3 md:gap-4 max-w-[90%] md:max-w-[85%] mr-auto message-enter">
+                <div class="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0 mt-1">
+                    <img src="carl_logo.jpeg" alt="AI" class="w-full h-full object-cover">
+                </div>
+                <div class="px-5 py-4 rounded-3xl glass text-gray-100 rounded-tl-none shadow-xl shadow-black/20">
+                    <p class="leading-relaxed text-[15px] md:text-base font-medium">¡Hola! Soy Carl AI. He sido diseñado por Carley Interactive Studio con una interfaz moderna y fluida. ¿En qué puedo ayudarte hoy?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="relative group mt-auto">
+            <div class="absolute -inset-1 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-[2rem] blur-xl opacity-0 group-focus-within:opacity-100 transition duration-1000"></div>
+            <div class="relative flex items-center gap-2 p-2.5 rounded-[1.8rem] glass-dark border border-white/10 backdrop-blur-[50px] shadow-2xl transition-all duration-300 input-glow">
+                <input
+                    type="text"
+                    id="user-input"
+                    placeholder="Pregúntale a Carl algo asombroso..."
+                    class="flex-1 bg-transparent border-none outline-none px-5 py-3 text-white placeholder:text-gray-500 md:text-lg"
+                    onkeydown="if(event.key === 'Enter') sendMessage()"
+                >
+                <button
+                    onclick="sendMessage()"
+                    class="p-4 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-all active:scale-95 group"
+                >
+                    <i data-lucide="send" class="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                </button>
+            </div>
+        </div>
+
+        <footer class="mt-4 text-center">
+            <p class="text-[10px] text-gray-600 font-medium uppercase tracking-widest">Carley Interactive Studio 2026 todos derechos reservados</p>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-50 items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-xl" onclick="toggleSettings()"></div>
+        <div class="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] bg-[#0A0A0A] border border-white/10 shadow-2xl shadow-black/80 flex flex-col md:flex-row h-[500px]">
+            <!-- Sidebar -->
+            <div class="w-full md:w-2/5 border-b md:border-b-0 md:border-r border-white/10 bg-white/[0.02] p-6 flex flex-col gap-3">
+                <h2 class="text-xl font-bold px-2 mb-4">Configuración</h2>
+                <button onclick="setTab('cuenta')" id="btn-cuenta" class="flex items-center gap-3 p-3.5 rounded-2xl bg-white/10 text-white shadow-lg transition-all duration-300">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                    <span class="font-semibold">Mi Cuenta</span>
+                </button>
+                <button onclick="setTab('novedades')" id="btn-novedades" class="flex items-center gap-3 p-3.5 rounded-2xl text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all duration-300">
+                    <i data-lucide="info" class="w-5 h-5"></i>
+                    <span class="font-semibold">Novedades</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 p-8 overflow-y-auto">
+                <div id="tab-cuenta" class="h-full flex flex-col items-center justify-center text-center max-w-xs mx-auto">
+                    <div class="relative mb-6">
+                        <div class="absolute -inset-4 bg-blue-500/10 rounded-full blur-2xl"></div>
+                        <div class="relative w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center border border-white/10 shadow-2xl">
+                            <i data-lucide="lock" class="w-8 h-8 text-gray-400"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Acceso Restringido</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-8">La sincronización en la nube y el historial persistente estarán disponibles en la próxima gran actualización.</p>
+                    <button disabled class="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed font-bold text-sm uppercase tracking-widest">Próximamente</button>
+                </div>
+
+                <div id="tab-novedades" class="hidden space-y-6">
+                    <h3 class="text-2xl font-bold mb-6">Últimas Novedades</h3>
+                    <div class="p-5 rounded-3xl bg-white/[0.03] border border-white/5">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-tighter">New</div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Marzo 2024</span>
+                        </div>
+                        <h4 class="text-lg font-bold mb-2">Interfaz HTML Standalone</h4>
+                        <p class="text-sm text-gray-400 leading-relaxed">Versión optimizada de alto rendimiento compatible con GitHub Pages.</p>
+                    </div>
+                    <div class="p-5 rounded-3xl bg-white/[0.01] border border-white/5 opacity-60">
+                        <div class="flex items-center gap-3 mb-3 text-blue-500">
+                            <i data-lucide="message-square" class="w-5 h-5"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">En Desarrollo</span>
+                        </div>
+                        <h4 class="text-lg font-bold mb-2">Conectividad HF Direct</h4>
+                        <p class="text-sm text-gray-400 leading-relaxed">Pronto podrás vincular cualquier modelo de Hugging Face directamente desde esta interfaz.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+
+        function toggleSettings() {
+            document.getElementById('settings-modal').classList.toggle('active');
+        }
+
+        function setTab(tab) {
+            const isCuenta = tab === 'cuenta';
+            document.getElementById('tab-cuenta').classList.toggle('hidden', !isCuenta);
+            document.getElementById('tab-novedades').classList.toggle('hidden', isCuenta);
+
+            document.getElementById('btn-cuenta').classList.toggle('bg-white/10', isCuenta);
+            document.getElementById('btn-cuenta').classList.toggle('text-white', isCuenta);
+            document.getElementById('btn-cuenta').classList.toggle('text-gray-500', !isCuenta);
+
+            document.getElementById('btn-novedades').classList.toggle('bg-white/10', !isCuenta);
+            document.getElementById('btn-novedades').classList.toggle('text-white', !isCuenta);
+            document.getElementById('btn-novedades').classList.toggle('text-gray-500', isCuenta);
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            userInput.value = '';
+            appendMessage('user', text);
+
+            // Show Typing Indicator
+            const loaderId = 'loader-' + Date.now();
+            appendLoader(loaderId);
+
+            // Simulate Response
+            setTimeout(() => {
+                removeLoader(loaderId);
+                appendMessage('assistant', 'Esta es una respuesta de prueba optimizada para HTML. Para usar IA real, pronto podrás configurar tu API de Hugging Face.');
+            }, 1500);
+        }
+
+        function appendMessage(role, text) {
+            const isUser = role === 'user';
+            const div = document.createElement('div');
+            div.className = `flex items-start gap-3 md:gap-4 max-w-[90%] md:max-w-[85%] ${isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'} message-enter`;
+
+            const iconContent = isUser
+                ? `<div class="w-10 h-10 rounded-xl bg-deep-blue border border-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0 mt-1 shadow-lg backdrop-blur-md">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                   </div>`
+                : `<div class="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0 mt-1">
+                    <img src="carl_logo.jpeg" alt="AI" class="w-full h-full object-cover">
+                   </div>`;
+
+            div.innerHTML = `
+                ${iconContent}
+                <div class="px-5 py-4 rounded-3xl backdrop-blur-[40px] border transition-all duration-300 ${isUser ? 'bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 rounded-tr-none text-blue-50/90 shadow-xl shadow-blue-900/10' : 'bg-white/5 border-white/10 rounded-tl-none text-gray-100 shadow-xl shadow-black/20'}">
+                    <p class="leading-relaxed text-[15px] md:text-base font-medium whitespace-pre-wrap">${text}</p>
+                </div>
+            `;
+
+            chatMessages.appendChild(div);
+            lucide.createIcons();
+            chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+        }
+
+        function appendLoader(id) {
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'flex items-center gap-3 mr-auto message-enter';
+            div.innerHTML = `
+                <div class="w-10 h-10 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center">
+                    <img src="carl_logo.jpeg" alt="AI" class="w-full h-full object-cover opacity-50">
+                </div>
+                <div class="px-5 py-3 rounded-2xl glass border border-white/10 backdrop-blur-xl">
+                    <div class="flex gap-1.5 h-6 items-center">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+        }
+
+        function removeLoader(id) {
+            const loader = document.getElementById(id);
+            if (loader) loader.remove();
+        }
+    </script>
+</body>
 </html>
